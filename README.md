@@ -122,4 +122,4 @@ The app is a single-activity Jetpack Compose project (Material 3). It uses only 
 
 ## License
 
-Add your license here (for example MIT) and a `LICENSE` file to the repo.
+Apache 2.0
