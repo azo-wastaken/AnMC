@@ -1,6 +1,7 @@
-[![Discord Badge](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cRTyfMcg2t)
 
 # PocketHost
+
+[![Discord Badge](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cRTyfMcg2t)
 
 **Host a Minecraft Java server from your Android phone.**
 
