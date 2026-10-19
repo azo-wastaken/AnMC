@@ -1,4 +1,4 @@
-[![Discord](https://img.shields.io/discord/YOUR_SERVER_ID?style=for-the-badge&logo=discord&logoColor=white&color=5865F2&label=Join%20Community)](https://discord.gg/cRTyfMcg2t)
+[![Discord Badge](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cRTyfMcg2t)
 
 # PocketHost
 
