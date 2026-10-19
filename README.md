@@ -3,6 +3,8 @@
 
 [![Discord Badge](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cRTyfMcg2t)
 
+[![GitHub Release](https://img.shields.io/github/v/release/your-username/your-repo?style=for-the-badge&color=238636)](https://github.com/azo-wastaken/PocketHost/releases)
+
 **Host a Minecraft Java server from your Android phone.**
 
 PocketHost is an Android app that installs and runs a Minecraft Java Edition server inside [Termux](https://termux.dev) and shares it online through a [Playit](https://playit.gg) tunnel. There's no port forwarding, no PC and no paid host.
