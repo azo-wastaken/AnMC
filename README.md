@@ -3,7 +3,7 @@
 
 [![Discord Badge](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cRTyfMcg2t)
 
-[![GitHub Release](https://img.shields.io/github.com/azo-wastaken/PocketHost/releases?style=for-the-badge&color=238636)](https://github.com/azo-wastaken/PocketHost/releases)
+[![GitHub Release](https://img.shields.io/github/v1.0/release/azo-wastaken/PocketHost?style=for-the-badge&color=238636&logo=github)](https://github.com/azo-wastaken/PocketHost/releases)
 
 **Host a Minecraft Java server from your Android phone.**
 
