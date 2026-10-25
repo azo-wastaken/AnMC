@@ -1,5 +1,5 @@
 
-# AnMC
+# PocketHost
 
 [![Discord Badge](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cRTyfMcg2t)
 
@@ -7,7 +7,7 @@
 
 **Host a Minecraft Java server from your Android phone.**
 
-AnMC is an Android app that installs and runs a Minecraft Java Edition server inside [Termux](https://termux.dev) and shares it online through a [Playit](https://playit.gg) tunnel. There's no port forwarding, no PC and no paid host.
+PocketHost is an Android app that installs and runs a Minecraft Java Edition server inside [Termux](https://termux.dev) and shares it online through a [Playit](https://playit.gg) tunnel. There's no port forwarding, no PC and no paid host.
 
 > Unofficial tool. Not affiliated with, endorsed by, or approved by Mojang or Microsoft.
 
@@ -42,7 +42,7 @@ AnMC is an Android app that installs and runs a Minecraft Java Edition server in
 ## First-time setup
 
 1. **Install Termux** and open it once.
-2. **Install AnMC** and open it. The welcome guide walks through the next two steps.
+2. **Install PocketHost** and open it. The welcome guide walks through the next two steps.
 3. **Enable external apps in Termux.** Tap **Set up Termux access** in the app. It copies a command and opens Termux. Paste it, press Enter, then fully close and reopen Termux.
 4. **Grant the permission.** Tap **Grant permission** for *Run commands in Termux environment*. If no dialog appears, use **Open app settings**, then Permissions (or Additional permissions), and turn it on.
 5. **Install a server.** Choose a type, version and RAM, accept the Minecraft EULA and tap **Install / change**. The first install takes about 5–20 minutes.
@@ -66,7 +66,7 @@ Files are downloaded by Termux into `~/server/mods` or `~/server/plugins`. Resta
 ## Backups
 
 - Backups are saved in Termux at `~/anmc/backups/` as `.tar.gz` files.
-- If you run `termux-setup-storage` in Termux once, each backup is also copied to `AnMC-Backups` in your phone's shared storage.
+- If you run `termux-setup-storage` in Termux once, each backup is also copied to `PocketHost-Backups` in your phone's shared storage.
 - **Restore** requires the server to be stopped. The current world is saved as a `pre-restore-…` backup first.
 
 ---
@@ -85,7 +85,7 @@ Files are downloaded by Termux into `~/server/mods` or `~/server/plugins`. Resta
    </queries>
    ```
 
-3. Set the app label (`app_name` in `res/values/strings.xml`) to **AnMC** if you want the name to match.
+3. Set the app label (`app_name` in `res/values/strings.xml`) to **PocketHost** if you want the name to match.
 4. Build and run on a device.
 
 The app is a single-activity Jetpack Compose project (Material 3). It uses only `HttpURLConnection` and the built-in `org.json`, so there are no extra networking dependencies.
