@@ -216,10 +216,22 @@ fun ModsTab(c: AppController, cfg: ServerConfig) {
                         "${noun.replaceFirstChar { it.uppercase() }}s run code on your server. Only install ones you trust.",
                         style = MaterialTheme.typography.bodySmall
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         providerNames.forEach { name ->
-                            RadioButton(selected = provider == name, onClick = { provider = name; message = "" })
-                            Text(name, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 6.dp))
+                            val pad = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                            if (provider == name) {
+                                Button(
+                                    onClick = { provider = name; message = "" },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = pad
+                                ) { Text(name, maxLines = 1, style = MaterialTheme.typography.labelMedium) }
+                            } else {
+                                OutlinedButton(
+                                    onClick = { provider = name; message = "" },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = pad
+                                ) { Text(name, maxLines = 1, style = MaterialTheme.typography.labelMedium) }
+                            }
                         }
                     }
                     OutlinedTextField(

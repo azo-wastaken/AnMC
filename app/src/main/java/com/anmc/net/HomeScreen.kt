@@ -263,10 +263,19 @@ fun ServerEditorDialog(c: AppController, initial: ServerConfig, isNew: Boolean, 
                     }
 
                     Text("Server software", style = MaterialTheme.typography.labelLarge)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        typesFor(edition).forEach { t ->
-                            RadioButton(selected = type == t, onClick = { type = t })
-                            Text(t, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 6.dp), maxLines = 1)
+                    // Two per row so every label fits, even on a narrow phone
+                    typesFor(edition).chunked(2).forEach { pair ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            pair.forEach { t ->
+                                Row(
+                                    modifier = Modifier.weight(1f).clickable { type = t },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(selected = type == t, onClick = { type = t })
+                                    Text(t, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                                }
+                            }
+                            if (pair.size == 1) Spacer(Modifier.weight(1f))
                         }
                     }
 
