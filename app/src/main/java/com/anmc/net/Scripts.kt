@@ -7,7 +7,7 @@ package com.anmc.net
 //  "ANMC_X:KIND:TOKEN:PAYLOAD"; the app reads them from the log.
 // ============================================================
 
-const val APP_NAME = "PocketHost"
+const val APP_NAME = "AnMC"
 
 // ---------- Termux paths ----------
 const val HOME = "/data/data/com.termux/files/home"

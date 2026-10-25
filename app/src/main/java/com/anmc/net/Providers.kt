@@ -25,7 +25,7 @@ data class ModHit(
 
 data class Resolved(val files: List<ModFile>, val warnings: List<String>)
 
-private const val UA = "PocketHost/1.0 (unofficial Android server host)"
+private const val UA = "AnMC/1.0 (unofficial Android server host)"
 
 // The network call can be swapped out, which is how the logic is tested
 var httpGetter: (String, Map<String, String>) -> String = { url, headers -> realHttpGet(url, headers) }
