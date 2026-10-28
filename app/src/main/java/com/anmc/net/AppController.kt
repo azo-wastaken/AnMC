@@ -80,6 +80,7 @@ class AppController(private val context: Context) {
     var players by mutableStateOf(PlayersState())
     var backups by mutableStateOf(BackupsState())
     var props by mutableStateOf(PropsState())
+    var configs by mutableStateOf(ConfigsState())
 
     // ----- internal bookkeeping -----
     private val issued = mutableSetOf<String>()     // tokens this app session created
@@ -149,7 +150,7 @@ class AppController(private val context: Context) {
 
     // ============ opening a server ============
     fun openServer(id: String) {
-        mods = ModsState(); players = PlayersState(); backups = BackupsState(); props = PropsState()
+        mods = ModsState(); players = PlayersState(); backups = BackupsState(); props = PropsState(); configs = ConfigsState()
         openServerId = id
     }
 
@@ -285,6 +286,41 @@ class AppController(private val context: Context) {
         run(savePropsCmd(cfg.id, toWrite, t))
     }
 
+    // ============ Config files ============
+    fun listConfigs(cfg: ServerConfig) {
+        val t = issue()
+        configs.begin(t)
+        run(listConfigsCmd(t, cfg.id, cfg.type))
+    }
+
+    fun readConfig(cfg: ServerConfig, file: ConfigFile) {
+        val t = issue()
+        configs.token = t
+        configs.loadingFile = true
+        configs.editingFile = file
+        configs.status = "Loading ${file.path}…"
+        run(readConfigCmd(t, cfg.id, file.path))
+    }
+
+    fun saveConfig(cfg: ServerConfig, file: ConfigFile, text: String, crlf: Boolean) {
+        val t = issue()
+        configs.token = t
+        configs.savingFile = true
+        configs.busy = true
+        configs.status = "Saving ${file.path}…"
+        val b64 = encodeConfig(text, crlf)
+        run(saveConfigCmd(t, cfg.id, file.path, b64))
+    }
+
+    fun restoreConfig(cfg: ServerConfig, file: ConfigFile) {
+        val t = issue()
+        configs.token = t
+        configs.savingFile = true
+        configs.busy = true
+        configs.status = "Restoring previous version of ${file.path}…"
+        run(restoreConfigCmd(t, cfg.id, file.path))
+    }
+
     // ============ the console ============
     suspend fun consoleLoop() {
         withContext(Dispatchers.IO) {
@@ -340,6 +376,7 @@ class AppController(private val context: Context) {
             "MODS_RESET", "MOD", "MODS_DONE", "MODOP" -> mods.handle(kind, token, payload)
             "BK_RESET", "BK", "BKOP", "BK_DONE" -> backups.handle(kind, token, payload)
             "PROP", "PROPS_LOADED", "PROP_ERROR", "PROP_SAVED" -> props.handle(kind, token, payload)
+            "CFG_RESET", "CFGFILE", "CFG_LIST_END", "CFGDATA", "CFG_SAVED", "CFG_RESTORED", "CFG_ERR" -> configs.handle(kind, token, payload)
             else -> {
                 if (token !in issued) return                         // not ours (an old session)
                 if (!handled.add("$kind:$token:$payload")) return    // already processed (replayed line)

@@ -163,16 +163,22 @@ fun ServerScreen(
     val info = c.installedInfo[cfg.id]
     val installedType = info?.first ?: ""
     val modsAvailable = cfg.isJava && installedType in setOf("Paper", "Fabric", "Forge")
+    val configsAvailable = configAvailableFor(cfg.type)
 
     var tab by remember(cfg.id) { mutableStateOf("server") }
     val tabs = buildList {
         add("server" to "Server")
         if (modsAvailable) add("mods" to (if (installedType == "Paper") "Plugins" else "Mods"))
+        if (configsAvailable) add("configs" to "Config files")
         add("players" to "Players")
         add("backups" to "Backups")
     }
-    // A Vanilla (or Bedrock) server has no mods/plugins tab at all
-    val active = if (tab == "mods" && !modsAvailable) "server" else tab
+    // A Vanilla server has no mods/plugins tab at all
+    val active = when {
+        tab == "mods" && !modsAvailable -> "server"
+        tab == "configs" && !configsAvailable -> "server"
+        else -> tab
+    }
     val index = tabs.indexOfFirst { it.first == active }.coerceAtLeast(0)
 
     Column(
@@ -207,6 +213,7 @@ fun ServerScreen(
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (active) {
                 "mods" -> ModsTab(c, cfg)
+                "configs" -> ConfigsTab(c, cfg)
                 "players" -> PlayersTab(c, cfg)
                 "backups" -> BackupsTab(c, cfg)
                 else -> ServerTab(c, cfg)

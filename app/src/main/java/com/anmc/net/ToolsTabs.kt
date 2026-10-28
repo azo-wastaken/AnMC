@@ -1,13 +1,19 @@
 package com.anmc.net
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -15,10 +21,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,7 +39,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 
 // ============================================================
@@ -304,5 +318,227 @@ fun BackupsTab(c: AppController, cfg: ServerConfig) {
                 }
             }
         }
+    }
+}
+
+// ---------------- Configs ----------------
+class ConfigsState {
+    var token by mutableStateOf("")
+    val files = mutableStateListOf<ConfigFile>()
+    var busy by mutableStateOf(false)
+    var status by mutableStateOf("")
+    var editingFile by mutableStateOf<ConfigFile?>(null)
+    var editingText by mutableStateOf("")
+    var editingCrlf by mutableStateOf(false)
+    var loadingFile by mutableStateOf(false)
+    var savingFile by mutableStateOf(false)
+
+    fun begin(t: String) {
+        token = t
+        busy = true
+    }
+
+    fun handle(kind: String, t: String, payload: String) {
+        if (t != token) return
+        when (kind) {
+            "CFG_RESET" -> { files.clear(); status = "Loading settings files…" }
+            "CFGFILE" -> {
+                val p = payload.split("|")
+                if (p.size >= 2) {
+                    val size = p[1].toLongOrNull() ?: 0L
+                    files.add(ConfigFile(p[0], size))
+                }
+            }
+            "CFG_LIST_END" -> {
+                busy = false
+                status = if (files.isEmpty()) "No settings files found yet. Start the server once first so plugins/mods create their config files." else "${files.size} settings file(s)."
+            }
+            "CFGDATA" -> {
+                loadingFile = false
+                val decoded = decodeConfig(payload)
+                if (decoded != null) {
+                    editingText = decoded.text
+                    editingCrlf = decoded.crlf
+                    status = "File loaded."
+                } else {
+                    status = "Could not open this file (it may not be UTF-8 plain text)."
+                    editingFile = null
+                }
+            }
+            "CFG_SAVED" -> {
+                savingFile = false
+                busy = false
+                status = "Saved changes. A backup of the previous version was kept."
+            }
+            "CFG_RESTORED" -> {
+                savingFile = false
+                busy = false
+                status = "Restored previous version."
+            }
+            "CFG_ERR" -> {
+                busy = false
+                loadingFile = false
+                savingFile = false
+                status = payload
+            }
+        }
+    }
+}
+
+@Composable
+fun ConfigsTab(c: AppController, cfg: ServerConfig) {
+    val state = c.configs
+    var filter by remember { mutableStateOf("") }
+
+    LaunchedEffect(cfg.id) {
+        if (state.files.isEmpty() && !state.busy) c.listConfigs(cfg)
+    }
+
+    val grouped = remember(state.files, filter) {
+        state.files
+            .filter { filter.isEmpty() || it.path.contains(filter, ignoreCase = true) }
+            .groupBy { configGroup(it.path) }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Config files", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            OutlinedButton(enabled = !state.busy, onClick = { c.listConfigs(cfg) }) { Text("Refresh") }
+                        }
+                        OutlinedTextField(
+                            value = filter,
+                            onValueChange = { filter = it },
+                            label = { Text("Search configs") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (state.busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        if (state.status.isNotBlank()) Text(state.status, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
+            grouped.forEach { (groupName, filesInGroup) ->
+                item(key = "header_$groupName") {
+                    Text(groupName, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp, start = 4.dp))
+                }
+                items(filesInGroup, key = { it.path }) { file ->
+                    Card(Modifier.fillMaxWidth().clickable { c.readConfig(cfg, file) }) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(file.path.substringAfterLast("/"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                Text("${file.path} · ${file.bytes / 1024} KB", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            TextButton(enabled = !state.busy, onClick = { c.readConfig(cfg, file) }) { Text("Edit") }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    state.editingFile?.let { file ->
+        ConfigEditorDialog(c = c, cfg = cfg, file = file, onDismiss = { state.editingFile = null })
+    }
+}
+
+@Composable
+fun ConfigEditorDialog(c: AppController, cfg: ServerConfig, file: ConfigFile, onDismiss: () -> Unit) {
+    val state = c.configs
+    var text by remember(state.editingText) { mutableStateOf(state.editingText) }
+    var confirmRestore by remember { mutableStateOf(false) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.9f),
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        file.path.substringAfterLast("/"),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedButton(
+                        enabled = !state.busy && !state.loadingFile,
+                        onClick = { confirmRestore = true }
+                    ) { Text("Restore version") }
+                }
+                Text(file.path, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                val warning = configWarning(file.path, text)
+                if (warning != null) {
+                    Text(warning, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                }
+
+                if (state.loadingFile) {
+                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                    )
+                }
+
+                if (state.status.isNotBlank()) {
+                    Text(state.status, style = MaterialTheme.typography.bodySmall)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Close") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        enabled = !state.busy && !state.loadingFile,
+                        onClick = { c.saveConfig(cfg, file, text, state.editingCrlf) }
+                    ) { Text("Save changes") }
+                }
+            }
+        }
+    }
+
+    if (confirmRestore) {
+        AlertDialog(
+            onDismissRequest = { confirmRestore = false },
+            title = { Text("Restore previous version?") },
+            text = { Text("This will revert ${file.path} to the previous saved version. Current changes will be lost.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRestore = false
+                    c.restoreConfig(cfg, file)
+                }) { Text("Restore") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestore = false }) { Text("Cancel") }
+            }
+        )
     }
 }
